@@ -136,7 +136,7 @@ int32_t dijkstra(graph_t *g, heap_t *h, vertex_set_t *src, vertex_set_t *dest,
         g->vertex[src->id[i]].from_src = 0;
     }
     // Build the heap
-    for (int i = 0; i < h->n_elts; i++)
+    for (int i = h->n_elts - 1; i >= 0; i--)
     {
         heap_down(g, h, i);
     }

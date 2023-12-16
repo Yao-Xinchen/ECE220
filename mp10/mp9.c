@@ -195,7 +195,7 @@ int32_t dijkstra(graph_t *g, heap_t *h, vertex_set_t *src, vertex_set_t *dest, p
     }
 
     // Build the heap
-    for (int i = 0; i < h->n_elts; i++)
+    for (int i = h->n_elts - 1; i >= 0; i--)
     {
         heap_down(g, h, i);
     }
@@ -227,7 +227,7 @@ int32_t dijkstra(graph_t *g, heap_t *h, vertex_set_t *src, vertex_set_t *dest, p
     path->tot_dist = MY_INFINITY;
     for (int i = 0; i < dest->count; i++)
     {
-        if (g->vertex[dest->id[i]].from_src < path->tot_dist)
+        if (g->vertex[dest->id[i]].from_src <= path->tot_dist)
         {
             dest_opt = dest->id[i];
             path->tot_dist = g->vertex[dest->id[i]].from_src;

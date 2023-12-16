@@ -1,0 +1,1 @@
+add_executable(mp4 main.c mp4.c)

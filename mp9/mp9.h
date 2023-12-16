@@ -122,14 +122,4 @@ extern void record_fn_call();
 // pyramid leaf nodes and graph vertices are within a locale
 extern int32_t in_range(locale_t *loc, int32_t x, int32_t y);
 
-/**********************************************************************
- * The functions below are defined by myself.
- *********************************************************************/
-
-void heap_down(graph_t *g, heap_t *h, int32_t i);
-
-void heap_up(graph_t *g, heap_t *h, int32_t i);
-
-void init_dijkstra(graph_t *g, heap_t *h);
-
 #endif // MP9_H

@@ -1,11 +1,11 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "mp8.h"
 
+
 /*
- * basicFlood -- wrapper for flood filling recursively from a point until 
+ * basicFlood -- wrapper for flood filling recursively from a point until
  *               reaching white or the image border
  * INPUTS: width -- width of the input image
  *         height -- height of the input image
@@ -23,27 +23,15 @@
  * RETURN VALUE: none
  * SIDE EFFECTS: none
  */
-void basicFlood(int32_t width, int32_t height, const uint8_t *inRed, const uint8_t *inGreen, const uint8_t *inBlue,
-                int32_t startX, int32_t startY, uint8_t floodR, uint8_t floodG, uint8_t floodB, uint8_t *outRed,
-                uint8_t *outGreen, uint8_t *outBlue)
+void
+basicFlood (int32_t width, int32_t height,
+	    const uint8_t* inRed, const uint8_t* inGreen,
+	    const uint8_t* inBlue,
+	    int32_t startX, int32_t startY,
+	    uint8_t floodR, uint8_t floodG, uint8_t floodB,
+	    uint8_t* outRed, uint8_t* outGreen,
+	    uint8_t* outBlue)
 {
-    memset(outRed, 0, width * height * sizeof(uint8_t));
-    basicRecurse(width, height, inRed, inGreen, inBlue, startX, startY, outRed);
-
-    for (int i = 0; i < width * height; i++)
-    {
-        if (outRed[i] == 1)
-        {
-            outRed[i] = floodR;
-            outGreen[i] = floodG;
-            outBlue[i] = floodB;
-        } else
-        {
-            outRed[i] = inRed[i];
-            outGreen[i] = inGreen[i];
-            outBlue[i] = inBlue[i];
-        }
-    }
 }
 
 
@@ -61,14 +49,11 @@ void basicFlood(int32_t width, int32_t height, const uint8_t *inRed, const uint8
  *               three components is less or equal to distSq; 0 otherwise
  * SIDE EFFECTS: none
  */
-int32_t colorsWithinDistSq(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint32_t distSq)
+int32_t
+colorsWithinDistSq (uint8_t r1, uint8_t g1, uint8_t b1,
+                    uint8_t r2, uint8_t g2, uint8_t b2, uint32_t distSq)
 {
-    int32_t r = r1 - r2;
-    int32_t g = g1 - g2;
-    int32_t b = b1 - b2;
-    int32_t distSqCalc = r * r + g * g + b * b;
-    if (distSqCalc <= distSq) return 1;
-    return 0;
+    return 1;
 }
 
 
@@ -93,27 +78,15 @@ int32_t colorsWithinDistSq(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8
  * RETURN VALUE: none
  * SIDE EFFECTS: none
  */
-void greyFlood(int32_t width, int32_t height, const uint8_t *inRed, const uint8_t *inGreen, const uint8_t *inBlue,
-               int32_t startX, int32_t startY, uint8_t floodR, uint8_t floodG, uint8_t floodB, uint32_t distSq,
-               uint8_t *outRed, uint8_t *outGreen, uint8_t *outBlue)
+void
+greyFlood (int32_t width, int32_t height,
+	   const uint8_t* inRed, const uint8_t* inGreen,
+	   const uint8_t* inBlue,
+	   int32_t startX, int32_t startY,
+	   uint8_t floodR, uint8_t floodG, uint8_t floodB, uint32_t distSq,
+	   uint8_t* outRed, uint8_t* outGreen,
+	   uint8_t* outBlue)
 {
-    memset(outRed, 0, width * height * sizeof(uint8_t));
-    greyRecurse(width, height, inRed, inGreen, inBlue, startX, startY, distSq, outRed);
-
-    for (int i = 0; i < width * height; i++)
-    {
-        if (outRed[i] == 1)
-        {
-            outRed[i] = floodR;
-            outGreen[i] = floodG;
-            outBlue[i] = floodB;
-        } else
-        {
-            outRed[i] = inRed[i];
-            outGreen[i] = inGreen[i];
-            outBlue[i] = inBlue[i];
-        }
-    }
 }
 
 
@@ -140,26 +113,15 @@ void greyFlood(int32_t width, int32_t height, const uint8_t *inRed, const uint8_
  * RETURN VALUE: none
  * SIDE EFFECTS: none
  */
-void limitedFlood(int32_t width, int32_t height, const uint8_t *inRed, const uint8_t *inGreen, const uint8_t *inBlue,
-                  int32_t startX, int32_t startY, uint8_t floodR, uint8_t floodG, uint8_t floodB, uint32_t distSq,
-                  uint8_t *outRed, uint8_t *outGreen, uint8_t *outBlue)
+void
+limitedFlood (int32_t width, int32_t height,
+	      const uint8_t* inRed, const uint8_t* inGreen,
+	      const uint8_t* inBlue,
+	      int32_t startX, int32_t startY,
+	      uint8_t floodR, uint8_t floodG, uint8_t floodB, uint32_t distSq,
+	      uint8_t* outRed, uint8_t* outGreen,
+	      uint8_t* outBlue)
 {
-    memset(outRed, 0, width * height * sizeof(uint8_t));
-    limitedRecurse(width, height, inRed, inGreen, inBlue, startX, startY, startX, startY, distSq, outRed);
-
-    for (int i = 0; i < width * height; i++)
-    {
-        if (outRed[i] == 1)
-        {
-            outRed[i] = floodR;
-            outGreen[i] = floodG;
-            outBlue[i] = floodB;
-        } else
-        {
-            outRed[i] = inRed[i];
-            outGreen[i] = inGreen[i];
-            outBlue[i] = inBlue[i];
-        }
-    }
 }
+
 

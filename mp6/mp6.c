@@ -31,7 +31,6 @@
  *		First written.
  */
 #include "mp6.h"
-#include <stdint.h>
 
 //
 // convert_RGB_to_HSL -- convert red, green, and blue image data into
@@ -48,69 +47,15 @@
 //   RETURN VALUE: none
 //   SIDE EFFECTS: none
 //
-uint16_t max(const uint8_t a, const uint8_t b, const uint8_t c) {
-    if (a >= b && a >= c) {
-        return a;
-    } else if (b >= a && b >= c) {
-        return b;
-    } else {
-        return c;
-    }
-}
-
-uint16_t min(const uint8_t a, const uint8_t b, const uint8_t c) {
-    if (a <= b && a <= c) {
-        return a;
-    } else if (b <= a && b <= c) {
-        return b;
-    } else {
-        return c;
-    }
-}
-
-uint16_t RGB_to_Luma(const uint8_t r, const uint8_t g, const uint8_t b) {
-    return max(r, g, b) + min(r, g, b);
-}
-
-uint16_t RGB_to_Chro(const uint8_t r, const uint8_t g, const uint8_t b) {
-    return max(r, g, b) - min(r, g, b);
-}
-
-uint16_t RGB_to_Satu(const uint8_t r, const uint8_t g, const uint8_t b) {
-    uint16_t m = max(r, g, b);
-    uint16_t n = min(r, g, b);
-    uint16_t l = RGB_to_Luma(r, g, b);
-    uint16_t c = RGB_to_Chro(r, g, b);
-
-    if (m == 0 || n == 255) return 0;
-    else if (0 < l && l <= 255) return (0x8000 * c) / l;
-    else return (0x8000 * c) / (510 - l);
-}
-
-uint16_t RGB_to_Hue(const uint8_t r, const uint8_t g, const uint8_t b) {
-    uint16_t m = max(r, g, b);
-    // uint16_t n = min(r, g, b);
-    uint16_t c = RGB_to_Chro(r, g, b);
-
-    if (c == 0) return 0;
-    else if (c > 0 && m == r) return (0x2000 * (c + g - b)) / c;
-    else if (c > 0 && m > r && m == g) return (0x2000 * (3 * c + b - r)) / c;
-    else return (0x2000 * (5 * c + r - g)) / c;
-}
-
 void
-convert_RGB_to_HSL(int32_t height, int32_t width, const uint8_t *red,
-                   const uint8_t *green, const uint8_t *blue,
-                   uint16_t *H, uint16_t *S, uint16_t *L) {
-    for (int i = 0; i < height * width; i++) {
-        H[i] = RGB_to_Hue(red[i], green[i], blue[i]);
-        S[i] = RGB_to_Satu(red[i], green[i], blue[i]);
-        L[i] = RGB_to_Luma(red[i], green[i], blue[i]);
-    }
+convert_RGB_to_HSL (int32_t height, int32_t width, const uint8_t* red,
+		    const uint8_t* green, const uint8_t* blue,
+		    uint16_t* H, uint16_t* S, uint16_t* L)
+{
 }
 
 //
-// convert_HSL_to_RGB -- convert HSL channel data into red, green, and 
+// convert_HSL_to_RGB -- convert HSL channel data into red, green, and
 //   blue image data.  See documentation for specific equations to be used.
 //
 //   INPUTS: height -- number of rows in image
@@ -124,55 +69,11 @@ convert_RGB_to_HSL(int32_t height, int32_t width, const uint8_t *red,
 //   RETURN VALUE: none
 //   SIDE EFFECTS: none
 //
-uint16_t HSL_to_Chro(const uint16_t s, const uint16_t l) {
-    if (l <= 255) return (s * l) / 0x8000;
-    else return (s * (510 - l)) / 0x8000;
-}
-
-uint16_t HSL_to_T(const uint16_t n, const uint16_t c, const uint16_t h_minor) {
-    if (h_minor >= 0x2000) return n + (c * (h_minor - 0x2000)) / 0x2000;
-    else return n + (c * (0x2000 - h_minor)) / 0x2000;
-}
-
-void replace(uint8_t *r, uint8_t *g, uint8_t *b, uint8_t r_n, uint16_t g_n, uint16_t b_n) {
-    *r = r_n;
-    *g = g_n;
-    *b = b_n;
-}
-
 void
-convert_HSL_to_RGB(int32_t height, int32_t width, const uint16_t *H,
-                   const uint16_t *S, const uint16_t *L,
-                   uint8_t *red, uint8_t *green, uint8_t *blue) {
-    for (int i = 0; i < height * width; i++) {
-        uint16_t c = HSL_to_Chro(S[i], L[i]);
-        uint16_t n = (L[i] - c) / 2;
-        uint16_t m = n + c;
-
-        uint16_t h_major = H[i] / 0x2000;
-        uint16_t h_minor = H[i] & 0x3fff;
-        uint16_t t = HSL_to_T(n, c, h_minor);
-
-        switch (h_major) {
-            case 0:
-                replace(red + i, green + i, blue + i, m, n, t);
-                break;
-            case 1:
-                replace(red + i, green + i, blue + i, m, t, n);
-                break;
-            case 2:
-                replace(red + i, green + i, blue + i, t, m, n);
-                break;
-            case 3:
-                replace(red + i, green + i, blue + i, n, m, t);
-                break;
-            case 4:
-                replace(red + i, green + i, blue + i, n, t, m);
-                break;
-            default:
-                replace(red + i, green + i, blue + i, t, n, m);
-        }
-    }
+convert_HSL_to_RGB (int32_t height, int32_t width, const uint16_t* H,
+		    const uint16_t* S, const uint16_t* L,
+		    uint8_t* red, uint8_t* green, uint8_t* blue)
+{
 }
 
 //
@@ -188,40 +89,10 @@ convert_HSL_to_RGB(int32_t height, int32_t width, const uint16_t *H,
 //   RETURN VALUE: none
 //   SIDE EFFECTS: none
 //
-int32_t x_convol(const uint16_t *center, const int32_t width) {
-    int32_t convol = 0;
-    convol += *(center - width - 1); // left up
-    convol -= *(center - width + 1); // right up
-    convol += *(center - 1) * 2; // left
-    convol -= *(center + 1) * 2; // right
-    convol += *(center + width - 1); // left down
-    convol -= *(center + width + 1); // right down
-    return convol;
-}
-
-int32_t y_convol(const uint16_t *const center, const int32_t width) {
-    int32_t convol = 0;
-    convol += *(center - width - 1); // left up
-    convol += *(center - width + 1); // right up
-    convol += *(center - width) * 2; // up
-    convol -= *(center + width) * 2; // down
-    convol -= *(center + width - 1); // left down
-    convol -= *(center + width + 1); // right down
-    return convol;
-}
-
 void
-compute_sobel_kernels(int32_t height, int32_t width, const uint16_t *L,
-                      int32_t *Gx, int32_t *Gy) {
-    for (int row = 1; row < height - 1; row++) {
-        for (int col = 1; col < width - 1; col++) {
-            const uint16_t *center_L = L + row * width + col;
-            int32_t *center_Gx = Gx + row * width + col;
-            int32_t *center_Gy = Gy + row * width + col;
-            *center_Gx = x_convol(center_L, width);
-            *center_Gy = y_convol(center_L, width);
-        }
-    }
+compute_sobel_kernels (int32_t height, int32_t width, const uint16_t* L,
+                       int32_t* Gx, int32_t* Gy)
+{
 }
 
 //
@@ -236,11 +107,8 @@ compute_sobel_kernels(int32_t height, int32_t width, const uint16_t *L,
 //   SIDE EFFECTS: none
 //
 void
-equalize_intensities(int32_t height, int32_t width, uint16_t *L) {
-    int64_t k[511] = {0};
-    for (int i = 0; i < height * width; i++) k[L[i]]++; // count of each level
-    for (int i = 1; i < 511; i++) k[i] += k[i - 1]; // cumulative count
-    for (int i = 0; i < 511; i++) k[i] = (511 * k[i] + (height * width) - 1) / (height * width) - 1; // equalized level
-    for (int i = 0; i < height * width; i++) L[i] = k[L[i]];
+equalize_intensities (int32_t height, int32_t width, uint16_t* L)
+{
 }
+
 

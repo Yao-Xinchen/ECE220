@@ -10,7 +10,14 @@ vertex_set_t *new_vertex_set()
     {
         vs->count = 0;
         vs->id_array_size = 0;
-        vs->id = NULL;
+
+        int32_t *id = malloc(sizeof(int32_t) * 16);
+        if (id == NULL)
+        {
+            free(vs);
+            return NULL;
+        }
+        vs->id = id;
     }
     return vs;
 }
@@ -23,8 +30,10 @@ void free_vertex_set(vertex_set_t *vs)
         if (vs->id != NULL)
         {
             free(vs->id);
+            vs->id = NULL;
         }
         free(vs);
+        vs = NULL;
     }
 }
 
@@ -35,7 +44,15 @@ path_t *new_path()
     {
         path->n_vertices = 0;
         path->tot_dist = 0; // TODO: to be tested
-        path->id = NULL;
+        path->minimap = 0;
+
+        int32_t *id = malloc(sizeof(int32_t) * 16);
+        if (id == NULL)
+        {
+            free(path);
+            return NULL;
+        }
+        path->id = id;
     }
     return path;
 }
@@ -48,8 +65,10 @@ void free_path(path_t *path)
         if (path->id != NULL)
         {
             free(path->id);
+            path->id = NULL;
         }
         free(path);
+        path = NULL;
     }
 }
 

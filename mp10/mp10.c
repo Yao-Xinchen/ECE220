@@ -51,37 +51,21 @@ void build_path_minimap(graph_t *g, path_t *p)
 
 int32_t merge_vertex_sets(const vertex_set_t *v1, const vertex_set_t *v2, vertex_set_t *vint)
 {
-    uint64_t mm_int = v1->minimap & v2->minimap;
-    vint->minimap = mm_int;
-
     vint->count = 0;
-
-    if (mm_int == 0) // empty
+    int i = 0, j = 0;
+    while (i < v1->count && j < v2->count)
     {
-        return 0;
-    } else // not empty
-    {
-        int i1 = 0;
-        int i2 = 0;
-        while (i1 < v1->count && i2 < v2->count)
+        if (v1->id[i] < v2->id[j])
         {
-            if (v1->id[i1] <= v2->id[i2])
-            {
-                vint->id[vint->count++] = v1->id[i1++];
-            } else
-            {
-                vint->id[vint->count++] = v2->id[i2++];
-            }
-        }
-        while (i1 < v1->count)
+            i++;
+        } else if (v1->id[i] > v2->id[j])
         {
-            vint->id[vint->count++] = v1->id[i1++];
-        }
-        while (i2 < v2->count)
+            j++;
+        } else
         {
-            vint->id[vint->count++] = v2->id[i2++];
+            vint->id[vint->count++] = v1->id[i++];
+            j++;
         }
-
-        return vint->count != 0; // 0 if empty, 1 if not empty
     }
+    return (vint->count != 0); // 0 if empty, 1 if not empty
 }

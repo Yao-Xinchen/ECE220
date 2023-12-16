@@ -9,7 +9,7 @@ vertex_set_t *new_vertex_set()
     if (vs != NULL)
     {
         vs->count = 0;
-        vs->id_array_size = 0;
+        vs->id_array_size = 16;
 
         int32_t *id = malloc(sizeof(int32_t) * 16);
         if (id == NULL)
@@ -30,10 +30,8 @@ void free_vertex_set(vertex_set_t *vs)
         if (vs->id != NULL)
         {
             free(vs->id);
-            vs->id = NULL;
         }
         free(vs);
-        vs = NULL;
     }
 }
 
@@ -65,10 +63,8 @@ void free_path(path_t *path)
         if (path->id != NULL)
         {
             free(path->id);
-            path->id = NULL;
         }
         free(path);
-        path = NULL;
     }
 }
 

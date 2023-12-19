@@ -47,52 +47,83 @@
  * PARAMETERS AND CONSTANTS
  */
 
-typedef enum {
+typedef enum
+{
     BR_NEVER, BR_P, BR_Z, BR_ZP, BR_N, BR_NP, BR_NZ, BR_ALWAYS, NUM_BR
 } br_type_t;
-
 
 
 /*
  * HELPER FUNCTION PROTOTYPES--see function headers for further information
  */
 
-static void gen_long_branch (br_type_t type, ece220_label_t* label);
+static void gen_long_branch(br_type_t type, ece220_label_t *label);
 
-static void gen_statement (ast220_t* ast);
-static void gen_for_statement (ast220_t* ast);
-static void gen_if_statement (ast220_t* ast);
-static void gen_return_statement (ast220_t* ast);
-static void gen_pop_stack (ast220_t* ast);
-static void gen_debug_marker (ast220_t* ast);
+static void gen_statement(ast220_t *ast);
 
-static void gen_expression (ast220_t* ast);
-static void gen_push_int (ast220_t* ast);
-static void gen_push_str (ast220_t* ast);
-static void gen_push_variable (ast220_t* ast);
-static void gen_func_call (ast220_t* ast);
-static void gen_get_address (ast220_t* ast);
-static void gen_op_assign (ast220_t* ast);
-static void gen_op_pre_incr (ast220_t* ast);
-static void gen_op_pre_decr (ast220_t* ast);
-static void gen_op_post_incr (ast220_t* ast);
-static void gen_op_post_decr (ast220_t* ast);
-static void gen_op_add (ast220_t* ast);
-static void gen_op_sub (ast220_t* ast);
-static void gen_op_mult (ast220_t* ast);
-static void gen_op_div (ast220_t* ast);
-static void gen_op_mod (ast220_t* ast);
-static void gen_op_negate (ast220_t* ast);
-static void gen_op_log_not (ast220_t* ast);
-static void gen_op_log_or (ast220_t* ast);
-static void gen_op_log_and (ast220_t* ast);
-static void gen_comparison (ast220_t* ast, const char* false_cond);
-static void gen_op_cmp_ne (ast220_t* ast);
-static void gen_op_cmp_less (ast220_t* ast);
-static void gen_op_cmp_le (ast220_t* ast);
-static void gen_op_cmp_eq (ast220_t* ast);
-static void gen_op_cmp_ge (ast220_t* ast);
-static void gen_op_cmp_greater (ast220_t* ast);
+static void gen_for_statement(ast220_t *ast);
+
+static void gen_if_statement(ast220_t *ast);
+
+static void gen_return_statement(ast220_t *ast);
+
+static void gen_pop_stack(ast220_t *ast);
+
+static void gen_debug_marker(ast220_t *ast);
+
+static void gen_expression(ast220_t *ast);
+
+static void gen_push_int(ast220_t *ast);
+
+static void gen_push_str(ast220_t *ast);
+
+static void gen_push_variable(ast220_t *ast);
+
+static void gen_func_call(ast220_t *ast);
+
+static void gen_get_address(ast220_t *ast);
+
+static void gen_op_assign(ast220_t *ast);
+
+static void gen_op_pre_incr(ast220_t *ast);
+
+static void gen_op_pre_decr(ast220_t *ast);
+
+static void gen_op_post_incr(ast220_t *ast);
+
+static void gen_op_post_decr(ast220_t *ast);
+
+static void gen_op_add(ast220_t *ast);
+
+static void gen_op_sub(ast220_t *ast);
+
+static void gen_op_mult(ast220_t *ast);
+
+static void gen_op_div(ast220_t *ast);
+
+static void gen_op_mod(ast220_t *ast);
+
+static void gen_op_negate(ast220_t *ast);
+
+static void gen_op_log_not(ast220_t *ast);
+
+static void gen_op_log_or(ast220_t *ast);
+
+static void gen_op_log_and(ast220_t *ast);
+
+static void gen_comparison(ast220_t *ast, const char *false_cond);
+
+static void gen_op_cmp_ne(ast220_t *ast);
+
+static void gen_op_cmp_less(ast220_t *ast);
+
+static void gen_op_cmp_le(ast220_t *ast);
+
+static void gen_op_cmp_eq(ast220_t *ast);
+
+static void gen_op_cmp_ge(ast220_t *ast);
+
+static void gen_op_cmp_greater(ast220_t *ast);
 
 
 /*
@@ -121,8 +152,7 @@ static void gen_op_cmp_greater (ast220_t* ast);
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-void 
-MP11_generate_code (ast220_t* prog)
+void MP11_generate_code(ast220_t *prog)
 {
 }
 
@@ -140,24 +170,21 @@ MP11_generate_code (ast220_t* prog)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_long_branch (br_type_t type, ece220_label_t* label)
+static void gen_long_branch(br_type_t type, ece220_label_t *label)
 {
-    static const char* const br_names[NUM_BR] = {
-        "; ", "BRp", "BRz", "BRzp", "BRn", "BRnp", "BRnz", "BRnzp"
-    }; 
+    static const char *const br_names[NUM_BR] = {"; ", "BRp", "BRz", "BRzp", "BRn", "BRnp", "BRnz", "BRnzp"};
     br_type_t neg_type;
-    ece220_label_t* target_label;
-    ece220_label_t* false_label;
+    ece220_label_t *target_label;
+    ece220_label_t *false_label;
 
     neg_type = (type ^ 7);
-    target_label = label_create ();
-    false_label = label_create ();
-    printf ("\t%s %s\n", br_names[neg_type], label_value (false_label));
-    printf ("\tLD R3,%s\n\tJMP R3\n", label_value (target_label));
-    printf ("%s\n", label_value (target_label));
-    printf ("\t.FILL %s\n", label_value (label));
-    printf ("%s\n", label_value (false_label));
+    target_label = label_create();
+    false_label = label_create();
+    printf("\t%s %s\n", br_names[neg_type], label_value(false_label));
+    printf("\tLD R3,%s\n\tJMP R3\n", label_value(target_label));
+    printf("%s\n", label_value(target_label));
+    printf("\t.FILL %s\n", label_value(label));
+    printf("%s\n", label_value(false_label));
 }
 
 /* 
@@ -168,16 +195,28 @@ gen_long_branch (br_type_t type, ece220_label_t* label)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_statement (ast220_t* ast)
+static void gen_statement(ast220_t *ast)
 {
-    switch (ast->type) {
-        case AST220_FOR_STMT:     gen_for_statement (ast);    break;
-        case AST220_IF_STMT:      gen_if_statement (ast);     break;
-        case AST220_RETURN_STMT:  gen_return_statement (ast); break;
-        case AST220_POP_STACK:    gen_pop_stack (ast);        break;
-        case AST220_DEBUG_MARKER: gen_debug_marker (ast);     break;
-	default: fputs ("BAD STATEMENT TYPE\n", stderr);      break;
+    switch (ast->type)
+    {
+        case AST220_FOR_STMT:
+            gen_for_statement(ast);
+            break;
+        case AST220_IF_STMT:
+            gen_if_statement(ast);
+            break;
+        case AST220_RETURN_STMT:
+            gen_return_statement(ast);
+            break;
+        case AST220_POP_STACK:
+            gen_pop_stack(ast);
+            break;
+        case AST220_DEBUG_MARKER:
+            gen_debug_marker(ast);
+            break;
+        default:
+            fputs("BAD STATEMENT TYPE\n", stderr);
+            break;
     }
 }
 
@@ -189,8 +228,7 @@ gen_statement (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_for_statement (ast220_t* ast)
+static void gen_for_statement(ast220_t *ast)
 {
 }
 
@@ -202,8 +240,7 @@ gen_for_statement (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_if_statement (ast220_t* ast)
+static void gen_if_statement(ast220_t *ast)
 {
 }
 
@@ -215,8 +252,7 @@ gen_if_statement (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_return_statement (ast220_t* ast)
+static void gen_return_statement(ast220_t *ast)
 {
 }
 
@@ -229,8 +265,7 @@ gen_return_statement (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_pop_stack (ast220_t* ast)
+static void gen_pop_stack(ast220_t *ast)
 {
 }
 
@@ -245,10 +280,9 @@ gen_pop_stack (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints an LC-3 assembly comment
  */
-static void 
-gen_debug_marker (ast220_t* ast)
+static void gen_debug_marker(ast220_t *ast)
 {
-    printf ("; --------------- DEBUG(%d) ---------------\n", ast->value);
+    printf("; --------------- DEBUG(%d) ---------------\n", ast->value);
 }
 
 /* 
@@ -260,36 +294,88 @@ gen_debug_marker (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_expression (ast220_t* ast)
+static void gen_expression(ast220_t *ast)
 {
-    switch (ast->type) {
-        case AST220_PUSH_INT:     gen_push_int (ast);       break;
-        case AST220_PUSH_STR:     gen_push_str (ast);       break;
-        case AST220_VARIABLE:     gen_push_variable (ast);  break;
-        case AST220_FUNC_CALL:    gen_func_call (ast);      break;
-	case AST220_GET_ADDRESS:  gen_get_address (ast);    break;
-	case AST220_OP_ASSIGN:    gen_op_assign (ast);      break;
-	case AST220_OP_PRE_INCR:  gen_op_pre_incr (ast);    break;
-	case AST220_OP_PRE_DECR:  gen_op_pre_decr (ast);    break;
-	case AST220_OP_POST_INCR: gen_op_post_incr (ast);   break;
-	case AST220_OP_POST_DECR: gen_op_post_decr (ast);   break;
-	case AST220_OP_ADD:       gen_op_add (ast);         break;
-	case AST220_OP_SUB:       gen_op_sub (ast);         break;
-	case AST220_OP_MULT:      gen_op_mult (ast);        break;
-	case AST220_OP_DIV:       gen_op_div (ast);         break;
-	case AST220_OP_MOD:       gen_op_mod (ast);         break;
-	case AST220_OP_NEGATE:    gen_op_negate (ast);      break;
-	case AST220_OP_LOG_NOT:   gen_op_log_not (ast);     break;
-	case AST220_OP_LOG_OR:    gen_op_log_or (ast);      break;
-	case AST220_OP_LOG_AND:   gen_op_log_and (ast);     break;
-	case AST220_CMP_NE:       gen_op_cmp_ne (ast);      break;
-	case AST220_CMP_LESS:     gen_op_cmp_less (ast);    break;
-	case AST220_CMP_LE:       gen_op_cmp_le (ast);      break;
-	case AST220_CMP_EQ:       gen_op_cmp_eq (ast);      break;
-	case AST220_CMP_GE:       gen_op_cmp_ge (ast);      break;
-	case AST220_CMP_GREATER:  gen_op_cmp_greater (ast); break;
-	default: fputs ("BAD EXPRESSION TYPE\n", stderr);   break;
+    switch (ast->type)
+    {
+        case AST220_PUSH_INT:
+            gen_push_int(ast);
+            break;
+        case AST220_PUSH_STR:
+            gen_push_str(ast);
+            break;
+        case AST220_VARIABLE:
+            gen_push_variable(ast);
+            break;
+        case AST220_FUNC_CALL:
+            gen_func_call(ast);
+            break;
+        case AST220_GET_ADDRESS:
+            gen_get_address(ast);
+            break;
+        case AST220_OP_ASSIGN:
+            gen_op_assign(ast);
+            break;
+        case AST220_OP_PRE_INCR:
+            gen_op_pre_incr(ast);
+            break;
+        case AST220_OP_PRE_DECR:
+            gen_op_pre_decr(ast);
+            break;
+        case AST220_OP_POST_INCR:
+            gen_op_post_incr(ast);
+            break;
+        case AST220_OP_POST_DECR:
+            gen_op_post_decr(ast);
+            break;
+        case AST220_OP_ADD:
+            gen_op_add(ast);
+            break;
+        case AST220_OP_SUB:
+            gen_op_sub(ast);
+            break;
+        case AST220_OP_MULT:
+            gen_op_mult(ast);
+            break;
+        case AST220_OP_DIV:
+            gen_op_div(ast);
+            break;
+        case AST220_OP_MOD:
+            gen_op_mod(ast);
+            break;
+        case AST220_OP_NEGATE:
+            gen_op_negate(ast);
+            break;
+        case AST220_OP_LOG_NOT:
+            gen_op_log_not(ast);
+            break;
+        case AST220_OP_LOG_OR:
+            gen_op_log_or(ast);
+            break;
+        case AST220_OP_LOG_AND:
+            gen_op_log_and(ast);
+            break;
+        case AST220_CMP_NE:
+            gen_op_cmp_ne(ast);
+            break;
+        case AST220_CMP_LESS:
+            gen_op_cmp_less(ast);
+            break;
+        case AST220_CMP_LE:
+            gen_op_cmp_le(ast);
+            break;
+        case AST220_CMP_EQ:
+            gen_op_cmp_eq(ast);
+            break;
+        case AST220_CMP_GE:
+            gen_op_cmp_ge(ast);
+            break;
+        case AST220_CMP_GREATER:
+            gen_op_cmp_greater(ast);
+            break;
+        default:
+            fputs("BAD EXPRESSION TYPE\n", stderr);
+            break;
     }
 }
 
@@ -302,8 +388,7 @@ gen_expression (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_push_int (ast220_t* ast)
+static void gen_push_int(ast220_t *ast)
 {
 }
 
@@ -316,8 +401,7 @@ gen_push_int (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_push_str (ast220_t* ast)
+static void gen_push_str(ast220_t *ast)
 {
 }
 
@@ -330,8 +414,7 @@ gen_push_str (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_push_variable (ast220_t* ast)
+static void gen_push_variable(ast220_t *ast)
 {
 }
 
@@ -345,8 +428,7 @@ gen_push_variable (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_func_call (ast220_t* ast)
+static void gen_func_call(ast220_t *ast)
 {
 }
 
@@ -359,8 +441,7 @@ gen_func_call (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_get_address (ast220_t* ast)
+static void gen_get_address(ast220_t *ast)
 {
 }
 
@@ -375,8 +456,7 @@ gen_get_address (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_assign (ast220_t* ast)
+static void gen_op_assign(ast220_t *ast)
 {
 }
 
@@ -390,8 +470,7 @@ gen_op_assign (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_pre_incr (ast220_t* ast)
+static void gen_op_pre_incr(ast220_t *ast)
 {
 }
 
@@ -405,8 +484,7 @@ gen_op_pre_incr (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_pre_decr (ast220_t* ast)
+static void gen_op_pre_decr(ast220_t *ast)
 {
 }
 
@@ -420,8 +498,7 @@ gen_op_pre_decr (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_post_incr (ast220_t* ast)
+static void gen_op_post_incr(ast220_t *ast)
 {
 }
 
@@ -435,8 +512,7 @@ gen_op_post_incr (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_post_decr (ast220_t* ast)
+static void gen_op_post_decr(ast220_t *ast)
 {
 }
 
@@ -449,8 +525,7 @@ gen_op_post_decr (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_add (ast220_t* ast)
+static void gen_op_add(ast220_t *ast)
 {
 }
 
@@ -463,8 +538,7 @@ gen_op_add (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_sub (ast220_t* ast)
+static void gen_op_sub(ast220_t *ast)
 {
 }
 
@@ -478,8 +552,7 @@ gen_op_sub (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_mult (ast220_t* ast)
+static void gen_op_mult(ast220_t *ast)
 {
 }
 
@@ -493,8 +566,7 @@ gen_op_mult (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_div (ast220_t* ast)
+static void gen_op_div(ast220_t *ast)
 {
 }
 
@@ -509,8 +581,7 @@ gen_op_div (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_mod (ast220_t* ast)
+static void gen_op_mod(ast220_t *ast)
 {
 }
 
@@ -523,8 +594,7 @@ gen_op_mod (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_negate (ast220_t* ast)
+static void gen_op_negate(ast220_t *ast)
 {
 }
 
@@ -538,8 +608,7 @@ gen_op_negate (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_log_not (ast220_t* ast)
+static void gen_op_log_not(ast220_t *ast)
 {
 }
 
@@ -555,8 +624,7 @@ gen_op_log_not (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_log_or (ast220_t* ast)
+static void gen_op_log_or(ast220_t *ast)
 {
 }
 
@@ -572,8 +640,7 @@ gen_op_log_or (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_log_and (ast220_t* ast)
+static void gen_op_log_and(ast220_t *ast)
 {
 }
 
@@ -591,20 +658,18 @@ gen_op_log_and (ast220_t* ast)
  *   SIDE EFFECTS: prints LC-3 instructions
  *   KNOWN BUGS: ignores 2's complement overflow in making the comparison
  */
-static void
-gen_comparison (ast220_t* ast, const char* false_cond)
+static void gen_comparison(ast220_t *ast, const char *false_cond)
 {
-    ece220_label_t* false_label;
+    ece220_label_t *false_label;
 
-    false_label = label_create ();
-    gen_expression (ast->left);
-    gen_expression (ast->right);
-    printf ("\tLDR R1,R6,#0\n\tLDR R0,R6,#1\n\tADD R6,R6,#2\n");
-    printf ("\tAND R2,R2,#0\n\tNOT R1,R1\n\tADD R1,R1,#1\n\tADD R0,R0,R1\n");
-    printf ("\tBR%s %s\n\tADD R2,R2,#1\n", false_cond,
-	    label_value (false_label));
-    printf ("%s\n", label_value (false_label));
-    printf ("\tADD R6,R6,#-1\n\tSTR R2,R6,#0\n");
+    false_label = label_create();
+    gen_expression(ast->left);
+    gen_expression(ast->right);
+    printf("\tLDR R1,R6,#0\n\tLDR R0,R6,#1\n\tADD R6,R6,#2\n");
+    printf("\tAND R2,R2,#0\n\tNOT R1,R1\n\tADD R1,R1,#1\n\tADD R0,R0,R1\n");
+    printf("\tBR%s %s\n\tADD R2,R2,#1\n", false_cond, label_value(false_label));
+    printf("%s\n", label_value(false_label));
+    printf("\tADD R6,R6,#-1\n\tSTR R2,R6,#0\n");
 }
 
 /* 
@@ -617,10 +682,9 @@ gen_comparison (ast220_t* ast, const char* false_cond)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_cmp_ne (ast220_t* ast)
+static void gen_op_cmp_ne(ast220_t *ast)
 {
-    gen_comparison (ast, "z");
+    gen_comparison(ast, "z");
 }
 
 /* 
@@ -633,10 +697,9 @@ gen_op_cmp_ne (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_cmp_less (ast220_t* ast)
+static void gen_op_cmp_less(ast220_t *ast)
 {
-    gen_comparison (ast, "zp");
+    gen_comparison(ast, "zp");
 }
 
 /* 
@@ -651,10 +714,9 @@ gen_op_cmp_less (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_cmp_le (ast220_t* ast)
+static void gen_op_cmp_le(ast220_t *ast)
 {
-    gen_comparison (ast, "p");
+    gen_comparison(ast, "p");
 }
 
 /* 
@@ -667,10 +729,9 @@ gen_op_cmp_le (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_cmp_eq (ast220_t* ast)
+static void gen_op_cmp_eq(ast220_t *ast)
 {
-    gen_comparison (ast, "np");
+    gen_comparison(ast, "np");
 }
 
 /* 
@@ -685,10 +746,9 @@ gen_op_cmp_eq (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_cmp_ge (ast220_t* ast)
+static void gen_op_cmp_ge(ast220_t *ast)
 {
-    gen_comparison (ast, "n");
+    gen_comparison(ast, "n");
 }
 
 /* 
@@ -701,9 +761,8 @@ gen_op_cmp_ge (ast220_t* ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void 
-gen_op_cmp_greater (ast220_t* ast)
+static void gen_op_cmp_greater(ast220_t *ast)
 {
-    gen_comparison (ast, "nz");
+    gen_comparison(ast, "nz");
 }
 

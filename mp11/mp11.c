@@ -42,6 +42,16 @@
 #include "ece220_parse.h"
 #include "ece220_symtab.h"
 
+/*
+ * LC-3 REGISTER USAGE
+ *
+ * R0-R3    available for general use
+ * R4       global data pointer
+ * R5       main’s stack frame pointer
+ * R6       stack pointer
+ * R7       used by JSR/JSRR
+ */
+
 
 /*
  * PARAMETERS AND CONSTANTS
@@ -49,7 +59,15 @@
 
 typedef enum
 {
-    BR_NEVER, BR_P, BR_Z, BR_ZP, BR_N, BR_NP, BR_NZ, BR_ALWAYS, NUM_BR
+    BR_NEVER,
+    BR_P,
+    BR_Z,
+    BR_ZP,
+    BR_N,
+    BR_NP,
+    BR_NZ,
+    BR_ALWAYS,
+    NUM_BR
 } br_type_t;
 
 
@@ -57,78 +75,78 @@ typedef enum
  * HELPER FUNCTION PROTOTYPES--see function headers for further information
  */
 
-static void gen_long_branch(br_type_t type, ece220_label_t *label);
+static void gen_long_branch(br_type_t type, ece220_label_t* label);
 
-static void gen_statement(ast220_t *ast);
+static void gen_statement(ast220_t* ast);
 
-static void gen_for_statement(ast220_t *ast);
+static void gen_for_statement(ast220_t* ast);
 
-static void gen_if_statement(ast220_t *ast);
+static void gen_if_statement(ast220_t* ast);
 
-static void gen_return_statement(ast220_t *ast);
+static void gen_return_statement(ast220_t* ast);
 
-static void gen_pop_stack(ast220_t *ast);
+static void gen_pop_stack(ast220_t* ast);
 
-static void gen_debug_marker(ast220_t *ast);
+static void gen_debug_marker(ast220_t* ast);
 
-static void gen_expression(ast220_t *ast);
+static void gen_expression(ast220_t* ast);
 
-static void gen_push_int(ast220_t *ast);
+static void gen_push_int(ast220_t* ast);
 
-static void gen_push_str(ast220_t *ast);
+static void gen_push_str(ast220_t* ast);
 
-static void gen_push_variable(ast220_t *ast);
+static void gen_push_variable(ast220_t* ast);
 
-static void gen_func_call(ast220_t *ast);
+static void gen_func_call(ast220_t* ast);
 
-static void gen_get_address(ast220_t *ast);
+static void gen_get_address(ast220_t* ast);
 
-static void gen_op_assign(ast220_t *ast);
+static void gen_op_assign(ast220_t* ast);
 
-static void gen_op_pre_incr(ast220_t *ast);
+static void gen_op_pre_incr(ast220_t* ast);
 
-static void gen_op_pre_decr(ast220_t *ast);
+static void gen_op_pre_decr(ast220_t* ast);
 
-static void gen_op_post_incr(ast220_t *ast);
+static void gen_op_post_incr(ast220_t* ast);
 
-static void gen_op_post_decr(ast220_t *ast);
+static void gen_op_post_decr(ast220_t* ast);
 
-static void gen_op_add(ast220_t *ast);
+static void gen_op_add(ast220_t* ast);
 
-static void gen_op_sub(ast220_t *ast);
+static void gen_op_sub(ast220_t* ast);
 
-static void gen_op_mult(ast220_t *ast);
+static void gen_op_mult(ast220_t* ast);
 
-static void gen_op_div(ast220_t *ast);
+static void gen_op_div(ast220_t* ast);
 
-static void gen_op_mod(ast220_t *ast);
+static void gen_op_mod(ast220_t* ast);
 
-static void gen_op_negate(ast220_t *ast);
+static void gen_op_negate(ast220_t* ast);
 
-static void gen_op_log_not(ast220_t *ast);
+static void gen_op_log_not(ast220_t* ast);
 
-static void gen_op_log_or(ast220_t *ast);
+static void gen_op_log_or(ast220_t* ast);
 
-static void gen_op_log_and(ast220_t *ast);
+static void gen_op_log_and(ast220_t* ast);
 
-static void gen_comparison(ast220_t *ast, const char *false_cond);
+static void gen_comparison(ast220_t* ast, const char* false_cond);
 
-static void gen_op_cmp_ne(ast220_t *ast);
+static void gen_op_cmp_ne(ast220_t* ast);
 
-static void gen_op_cmp_less(ast220_t *ast);
+static void gen_op_cmp_less(ast220_t* ast);
 
-static void gen_op_cmp_le(ast220_t *ast);
+static void gen_op_cmp_le(ast220_t* ast);
 
-static void gen_op_cmp_eq(ast220_t *ast);
+static void gen_op_cmp_eq(ast220_t* ast);
 
-static void gen_op_cmp_ge(ast220_t *ast);
+static void gen_op_cmp_ge(ast220_t* ast);
 
-static void gen_op_cmp_greater(ast220_t *ast);
+static void gen_op_cmp_greater(ast220_t* ast);
 
 
 /*
  * FILE SCOPE VARIABLES
- * 
+ *
  * N.B.  You will need to have a file scope variable to implement one
  * of the statements.  Define it here.
  *
@@ -136,14 +154,14 @@ static void gen_op_cmp_greater(ast220_t *ast);
  *
  */
 
+ece220_label_t* ret = NULL;
 
-
-/* 
+/*
  * INTERFACE FUNCTIONS -- called from other files; the one function listed
  * here is the equivalent of "main" for students working on this MP
  */
 
-/* 
+/*
  * MP11_generate_code
  *   DESCRIPTION: perform LC-3 code generation (print to stdout)
  *   INPUTS: prog -- the main subroutine of the program (a list of
@@ -152,15 +170,29 @@ static void gen_op_cmp_greater(ast220_t *ast);
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-void MP11_generate_code(ast220_t *prog)
+void MP11_generate_code(ast220_t* prog)
 {
+    if (prog->type == AST220_FOR_STMT || prog->type == AST220_IF_STMT || prog->type == AST220_RETURN_STMT ||
+        prog->type == AST220_POP_STACK || prog->type == AST220_DEBUG_MARKER)
+    {
+        gen_statement(prog);
+    }
+    else
+    {
+        gen_expression(prog);
+    }
+
+    if (prog->next != NULL)
+    {
+        MP11_generate_code(prog->next);
+    }
 }
 
 /*
  * HELPER FUNCTIONS (used only within this file)
  */
 
-/* 
+/*
  * gen_long_branch
  *   DESCRIPTION: generate LC-3 assembly code for a branch without offset
  *                limitations
@@ -170,12 +202,12 @@ void MP11_generate_code(ast220_t *prog)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_long_branch(br_type_t type, ece220_label_t *label)
+static void gen_long_branch(br_type_t type, ece220_label_t* label)
 {
-    static const char *const br_names[NUM_BR] = {"; ", "BRp", "BRz", "BRzp", "BRn", "BRnp", "BRnz", "BRnzp"};
+    static const char* const br_names[NUM_BR] = {"; ", "BRp", "BRz", "BRzp", "BRn", "BRnp", "BRnz", "BRnzp"};
     br_type_t neg_type;
-    ece220_label_t *target_label;
-    ece220_label_t *false_label;
+    ece220_label_t* target_label;
+    ece220_label_t* false_label;
 
     neg_type = (type ^ 7);
     target_label = label_create();
@@ -187,7 +219,7 @@ static void gen_long_branch(br_type_t type, ece220_label_t *label)
     printf("%s\n", label_value(false_label));
 }
 
-/* 
+/*
  * gen_statement
  *   DESCRIPTION: generate LC-3 assembly code for an arbitrary statement
  *   INPUTS: ast -- the AST node corresponding to the statement
@@ -195,32 +227,32 @@ static void gen_long_branch(br_type_t type, ece220_label_t *label)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_statement(ast220_t *ast)
+static void gen_statement(ast220_t* ast)
 {
     switch (ast->type)
     {
-        case AST220_FOR_STMT:
-            gen_for_statement(ast);
-            break;
-        case AST220_IF_STMT:
-            gen_if_statement(ast);
-            break;
-        case AST220_RETURN_STMT:
-            gen_return_statement(ast);
-            break;
-        case AST220_POP_STACK:
-            gen_pop_stack(ast);
-            break;
-        case AST220_DEBUG_MARKER:
-            gen_debug_marker(ast);
-            break;
-        default:
-            fputs("BAD STATEMENT TYPE\n", stderr);
-            break;
+    case AST220_FOR_STMT:
+        gen_for_statement(ast);
+        break;
+    case AST220_IF_STMT:
+        gen_if_statement(ast);
+        break;
+    case AST220_RETURN_STMT:
+        gen_return_statement(ast);
+        break;
+    case AST220_POP_STACK:
+        gen_pop_stack(ast);
+        break;
+    case AST220_DEBUG_MARKER:
+        gen_debug_marker(ast);
+        break;
+    default:
+        fputs("BAD STATEMENT TYPE\n", stderr);
+        break;
     }
 }
 
-/* 
+/*
  * gen_for_statement
  *   DESCRIPTION: generate LC-3 assembly code for an for loop
  *   INPUTS: ast -- the AST node corresponding to the for loop
@@ -228,11 +260,11 @@ static void gen_statement(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_for_statement(ast220_t *ast)
+static void gen_for_statement(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_if_statement
  *   DESCRIPTION: generate LC-3 assembly code for an if statement
  *   INPUTS: ast -- the AST node corresponding to the if statement
@@ -240,11 +272,11 @@ static void gen_for_statement(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_if_statement(ast220_t *ast)
+static void gen_if_statement(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_return_statement
  *   DESCRIPTION: generate LC-3 assembly code for a return statement
  *   INPUTS: ast -- the AST node corresponding to the return statement
@@ -252,11 +284,17 @@ static void gen_if_statement(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_return_statement(ast220_t *ast)
+static void gen_return_statement(ast220_t* ast)
 {
+    gen_expression(ast->left);
+    // return value is in on the top of the stack
+    printf("\tLDR R0,R6,#0\n"); // store the return value in R0
+    printf("\tADD R6,R6,#1\n"); // pop the return value off the stack
+    printf("\tSTR R0,R5,#3\n"); // store the R0 value in the caller's stack frame, R5 + 3
+    gen_long_branch(BR_ALWAYS, ret);
 }
 
-/* 
+/*
  * gen_pop_stack
  *   DESCRIPTION: generate LC-3 assembly code to pop and discard a value
  *                from the stack
@@ -265,11 +303,11 @@ static void gen_return_statement(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_pop_stack(ast220_t *ast)
+static void gen_pop_stack(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_debug_marker
  *   DESCRIPTION: generate LC-3 assembly code for a debug marker used to
  *                help debug LC-3 code generation; the marker is simply
@@ -280,12 +318,12 @@ static void gen_pop_stack(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints an LC-3 assembly comment
  */
-static void gen_debug_marker(ast220_t *ast)
+static void gen_debug_marker(ast220_t* ast)
 {
     printf("; --------------- DEBUG(%d) ---------------\n", ast->value);
 }
 
-/* 
+/*
  * gen_expression
  *   DESCRIPTION: generate LC-3 assembly code to calculate an arbitrary
  *                expression and push the result onto the stack
@@ -294,92 +332,92 @@ static void gen_debug_marker(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_expression(ast220_t *ast)
+static void gen_expression(ast220_t* ast)
 {
     switch (ast->type)
     {
-        case AST220_PUSH_INT:
-            gen_push_int(ast);
-            break;
-        case AST220_PUSH_STR:
-            gen_push_str(ast);
-            break;
-        case AST220_VARIABLE:
-            gen_push_variable(ast);
-            break;
-        case AST220_FUNC_CALL:
-            gen_func_call(ast);
-            break;
-        case AST220_GET_ADDRESS:
-            gen_get_address(ast);
-            break;
-        case AST220_OP_ASSIGN:
-            gen_op_assign(ast);
-            break;
-        case AST220_OP_PRE_INCR:
-            gen_op_pre_incr(ast);
-            break;
-        case AST220_OP_PRE_DECR:
-            gen_op_pre_decr(ast);
-            break;
-        case AST220_OP_POST_INCR:
-            gen_op_post_incr(ast);
-            break;
-        case AST220_OP_POST_DECR:
-            gen_op_post_decr(ast);
-            break;
-        case AST220_OP_ADD:
-            gen_op_add(ast);
-            break;
-        case AST220_OP_SUB:
-            gen_op_sub(ast);
-            break;
-        case AST220_OP_MULT:
-            gen_op_mult(ast);
-            break;
-        case AST220_OP_DIV:
-            gen_op_div(ast);
-            break;
-        case AST220_OP_MOD:
-            gen_op_mod(ast);
-            break;
-        case AST220_OP_NEGATE:
-            gen_op_negate(ast);
-            break;
-        case AST220_OP_LOG_NOT:
-            gen_op_log_not(ast);
-            break;
-        case AST220_OP_LOG_OR:
-            gen_op_log_or(ast);
-            break;
-        case AST220_OP_LOG_AND:
-            gen_op_log_and(ast);
-            break;
-        case AST220_CMP_NE:
-            gen_op_cmp_ne(ast);
-            break;
-        case AST220_CMP_LESS:
-            gen_op_cmp_less(ast);
-            break;
-        case AST220_CMP_LE:
-            gen_op_cmp_le(ast);
-            break;
-        case AST220_CMP_EQ:
-            gen_op_cmp_eq(ast);
-            break;
-        case AST220_CMP_GE:
-            gen_op_cmp_ge(ast);
-            break;
-        case AST220_CMP_GREATER:
-            gen_op_cmp_greater(ast);
-            break;
-        default:
-            fputs("BAD EXPRESSION TYPE\n", stderr);
-            break;
+    case AST220_PUSH_INT:
+        gen_push_int(ast);
+        break;
+    case AST220_PUSH_STR:
+        gen_push_str(ast);
+        break;
+    case AST220_VARIABLE:
+        gen_push_variable(ast);
+        break;
+    case AST220_FUNC_CALL:
+        gen_func_call(ast);
+        break;
+    case AST220_GET_ADDRESS:
+        gen_get_address(ast);
+        break;
+    case AST220_OP_ASSIGN:
+        gen_op_assign(ast);
+        break;
+    case AST220_OP_PRE_INCR:
+        gen_op_pre_incr(ast);
+        break;
+    case AST220_OP_PRE_DECR:
+        gen_op_pre_decr(ast);
+        break;
+    case AST220_OP_POST_INCR:
+        gen_op_post_incr(ast);
+        break;
+    case AST220_OP_POST_DECR:
+        gen_op_post_decr(ast);
+        break;
+    case AST220_OP_ADD:
+        gen_op_add(ast);
+        break;
+    case AST220_OP_SUB:
+        gen_op_sub(ast);
+        break;
+    case AST220_OP_MULT:
+        gen_op_mult(ast);
+        break;
+    case AST220_OP_DIV:
+        gen_op_div(ast);
+        break;
+    case AST220_OP_MOD:
+        gen_op_mod(ast);
+        break;
+    case AST220_OP_NEGATE:
+        gen_op_negate(ast);
+        break;
+    case AST220_OP_LOG_NOT:
+        gen_op_log_not(ast);
+        break;
+    case AST220_OP_LOG_OR:
+        gen_op_log_or(ast);
+        break;
+    case AST220_OP_LOG_AND:
+        gen_op_log_and(ast);
+        break;
+    case AST220_CMP_NE:
+        gen_op_cmp_ne(ast);
+        break;
+    case AST220_CMP_LESS:
+        gen_op_cmp_less(ast);
+        break;
+    case AST220_CMP_LE:
+        gen_op_cmp_le(ast);
+        break;
+    case AST220_CMP_EQ:
+        gen_op_cmp_eq(ast);
+        break;
+    case AST220_CMP_GE:
+        gen_op_cmp_ge(ast);
+        break;
+    case AST220_CMP_GREATER:
+        gen_op_cmp_greater(ast);
+        break;
+    default:
+        fputs("BAD EXPRESSION TYPE\n", stderr);
+        break;
     }
 }
 
-/* 
+/*
  * gen_push_int
  *   DESCRIPTION: generate LC-3 assembly code to push a constant integer
  *                expression onto the stack
@@ -388,11 +426,18 @@ static void gen_expression(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_push_int(ast220_t *ast)
+static void gen_push_int(ast220_t* ast)
 {
+    ece220_label_t* val = label_create();
+    ece220_label_t* ins = label_create();
+    printf("\tLD R0,%s\n", label_value(val)); // load the value into R0
+    printf("\tADD R6,R6,#-1\n"); // push the value onto the stack
+    printf("\tSTR R0,R6,#0\n"); // store the value in the stack
+    printf("\tBRnzp %s\n%s\n", label_value(ins), label_value(val)); // branch to the next instruction
+    printf("\t.FILL %d\n%s\n", ast->value, label_value(ins)); // fill the value
 }
 
-/* 
+/*
  * gen_push_str
  *   DESCRIPTION: generate LC-3 assembly code to push a constant string
  *                expression onto the stack
@@ -401,11 +446,11 @@ static void gen_push_int(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_push_str(ast220_t *ast)
+static void gen_push_str(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_push_variable
  *   DESCRIPTION: generate LC-3 assembly code to push a variable's value
  *                onto the stack
@@ -414,11 +459,11 @@ static void gen_push_str(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_push_variable(ast220_t *ast)
+static void gen_push_variable(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_func_call
  *   DESCRIPTION: generate LC-3 assembly code to perform a function call,
  *                remove the arguments from the stack, and leave the
@@ -428,11 +473,11 @@ static void gen_push_variable(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_func_call(ast220_t *ast)
+static void gen_func_call(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_get_address
  *   DESCRIPTION: generate LC-3 assembly code to push the address of
  *                a variable onto the stack
@@ -441,11 +486,11 @@ static void gen_func_call(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_get_address(ast220_t *ast)
+static void gen_get_address(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_op_assign
  *   DESCRIPTION: generate LC-3 assembly code to perform an assignment,
  *                leaving the value assigned on the stack (assignments
@@ -456,13 +501,13 @@ static void gen_get_address(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_assign(ast220_t *ast)
+static void gen_op_assign(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_op_pre_incr
- *   DESCRIPTION: generate LC-3 assembly code to for a pre-increment 
+ *   DESCRIPTION: generate LC-3 assembly code to for a pre-increment
  *                expression, which increments a variable and pushes
  *                the new value of the variable onto the stack
  *   INPUTS: ast -- the AST node corresponding to pre-increment
@@ -470,13 +515,13 @@ static void gen_op_assign(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_pre_incr(ast220_t *ast)
+static void gen_op_pre_incr(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_op_pre_decr
- *   DESCRIPTION: generate LC-3 assembly code to for a pre-decrement 
+ *   DESCRIPTION: generate LC-3 assembly code to for a pre-decrement
  *                expression, which decrements a variable and pushes
  *                the new value of the variable onto the stack
  *   INPUTS: ast -- the AST node corresponding to pre-decrement
@@ -484,13 +529,13 @@ static void gen_op_pre_incr(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_pre_decr(ast220_t *ast)
+static void gen_op_pre_decr(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_op_post_incr
- *   DESCRIPTION: generate LC-3 assembly code to for a post-increment 
+ *   DESCRIPTION: generate LC-3 assembly code to for a post-increment
  *                expression, which increments a variable and pushes
  *                the original value of the variable onto the stack
  *   INPUTS: ast -- the AST node corresponding to post-increment
@@ -498,13 +543,13 @@ static void gen_op_pre_decr(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_post_incr(ast220_t *ast)
+static void gen_op_post_incr(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_op_post_decr
- *   DESCRIPTION: generate LC-3 assembly code to for a post-decrement 
+ *   DESCRIPTION: generate LC-3 assembly code to for a post-decrement
  *                expression, which decrements a variable and pushes
  *                the original value of the variable onto the stack
  *   INPUTS: ast -- the AST node corresponding to post-decrement
@@ -512,11 +557,11 @@ static void gen_op_post_incr(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_post_decr(ast220_t *ast)
+static void gen_op_post_decr(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_op_add
  *   DESCRIPTION: generate LC-3 assembly code to calculate the sum of two
  *                expressions, leaving the sum on the stack
@@ -525,26 +570,26 @@ static void gen_op_post_decr(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_add(ast220_t *ast)
+static void gen_op_add(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_op_sub
- *   DESCRIPTION: generate LC-3 assembly code to calculate the difference 
+ *   DESCRIPTION: generate LC-3 assembly code to calculate the difference
  *                of two expressions, leaving the difference on the stack
  *   INPUTS: ast -- the AST node corresponding to the subtraction operation
  *   OUTPUTS: none
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_sub(ast220_t *ast)
+static void gen_op_sub(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_op_mult
- *   DESCRIPTION: generate LC-3 assembly code to calculate the product 
+ *   DESCRIPTION: generate LC-3 assembly code to calculate the product
  *                of two expressions (using the MULTIPLY subroutine in
  *                the LC-3 library), leaving the product on the stack
  *   INPUTS: ast -- the AST node corresponding to the multiplication operation
@@ -552,13 +597,13 @@ static void gen_op_sub(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_mult(ast220_t *ast)
+static void gen_op_mult(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_op_div
- *   DESCRIPTION: generate LC-3 assembly code to calculate the quotient 
+ *   DESCRIPTION: generate LC-3 assembly code to calculate the quotient
  *                of two expressions (using the DIVIDE subroutine in
  *                the LC-3 library), leaving the quotient on the stack
  *   INPUTS: ast -- the AST node corresponding to the division operation
@@ -566,26 +611,26 @@ static void gen_op_mult(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_div(ast220_t *ast)
+static void gen_op_div(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_op_mod
- *   DESCRIPTION: generate LC-3 assembly code to calculate the modulus 
- *                of one expression relative to a second expression (using 
- *                the MODULUS subroutine in the LC-3 library), leaving 
+ *   DESCRIPTION: generate LC-3 assembly code to calculate the modulus
+ *                of one expression relative to a second expression (using
+ *                the MODULUS subroutine in the LC-3 library), leaving
  *                the result on the stack
  *   INPUTS: ast -- the AST node corresponding to the division operation
  *   OUTPUTS: none
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_mod(ast220_t *ast)
+static void gen_op_mod(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_op_negate
  *   DESCRIPTION: generate LC-3 assembly code to negate the value of an
  *                expression, leaving the result on the stack
@@ -594,11 +639,11 @@ static void gen_op_mod(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_negate(ast220_t *ast)
+static void gen_op_negate(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_op_log_not
  *   DESCRIPTION: generate LC-3 assembly code to perform a logical NOT
  *                operation on an expression, leaving the result (0 or 1)
@@ -608,11 +653,11 @@ static void gen_op_negate(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_log_not(ast220_t *ast)
+static void gen_op_log_not(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_op_log_or
  *   DESCRIPTION: generate LC-3 assembly code to perform a logical OR
  *                operation on two expressions, leaving the result (0 or 1)
@@ -624,11 +669,11 @@ static void gen_op_log_not(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_log_or(ast220_t *ast)
+static void gen_op_log_or(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_op_log_and
  *   DESCRIPTION: generate LC-3 assembly code to perform a logical AND
  *                operation on two expressions, leaving the result (0 or 1)
@@ -640,27 +685,27 @@ static void gen_op_log_or(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_log_and(ast220_t *ast)
+static void gen_op_log_and(ast220_t* ast) // TODO
 {
 }
 
-/* 
+/*
  * gen_comparison
  *   DESCRIPTION: generate LC-3 assembly code for a comparison operator,
  *                leaving the result (0 or 1) on the stack
  *   INPUTS: ast -- the AST node corresponding to the comparison
- *           false_cond -- a string representation of the condition codes 
+ *           false_cond -- a string representation of the condition codes
  *                         for which the comparison is false (as calculated
- *                         by subtracting the second expression from the 
+ *                         by subtracting the second expression from the
  *                         first)
  *   OUTPUTS: none
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  *   KNOWN BUGS: ignores 2's complement overflow in making the comparison
  */
-static void gen_comparison(ast220_t *ast, const char *false_cond)
+static void gen_comparison(ast220_t* ast, const char* false_cond)
 {
-    ece220_label_t *false_label;
+    ece220_label_t* false_label;
 
     false_label = label_create();
     gen_expression(ast->left);
@@ -672,22 +717,22 @@ static void gen_comparison(ast220_t *ast, const char *false_cond)
     printf("\tADD R6,R6,#-1\n\tSTR R2,R6,#0\n");
 }
 
-/* 
+/*
  * gen_op_cmp_ne
  *   DESCRIPTION: generate LC-3 assembly code to compare whether the value
- *                of one expression is not equal to the value of a second 
+ *                of one expression is not equal to the value of a second
  *                expression, leaving the result (0 or 1) on the stack
  *   INPUTS: ast -- the AST node corresponding to the inequality operation
  *   OUTPUTS: none
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_cmp_ne(ast220_t *ast)
+static void gen_op_cmp_ne(ast220_t* ast)
 {
     gen_comparison(ast, "z");
 }
 
-/* 
+/*
  * gen_op_cmp_less
  *   DESCRIPTION: generate LC-3 assembly code to compare whether the value
  *                of one expression is less than the value of a second
@@ -697,61 +742,61 @@ static void gen_op_cmp_ne(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_cmp_less(ast220_t *ast)
+static void gen_op_cmp_less(ast220_t* ast)
 {
     gen_comparison(ast, "zp");
 }
 
-/* 
+/*
  * gen_op_cmp_le
  *   DESCRIPTION: generate LC-3 assembly code to compare whether the value
- *                of one expression is less than or equal to the value 
- *                of a second expression, leaving the result (0 or 1) on 
+ *                of one expression is less than or equal to the value
+ *                of a second expression, leaving the result (0 or 1) on
  *                the stack
- *   INPUTS: ast -- the AST node corresponding to the less-or-equal-to 
+ *   INPUTS: ast -- the AST node corresponding to the less-or-equal-to
  *                  operation
  *   OUTPUTS: none
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_cmp_le(ast220_t *ast)
+static void gen_op_cmp_le(ast220_t* ast)
 {
     gen_comparison(ast, "p");
 }
 
-/* 
+/*
  * gen_op_cmp_eq
  *   DESCRIPTION: generate LC-3 assembly code to compare whether the value
- *                of one expression is equal to the value of a second 
+ *                of one expression is equal to the value of a second
  *                expression, leaving the result (0 or 1) on the stack
  *   INPUTS: ast -- the AST node corresponding to the equality operation
  *   OUTPUTS: none
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_cmp_eq(ast220_t *ast)
+static void gen_op_cmp_eq(ast220_t* ast)
 {
     gen_comparison(ast, "np");
 }
 
-/* 
+/*
  * gen_op_cmp_ge
  *   DESCRIPTION: generate LC-3 assembly code to compare whether the value
- *                of one expression is greater than or equal to the value 
- *                of a second expression, leaving the result (0 or 1) on 
+ *                of one expression is greater than or equal to the value
+ *                of a second expression, leaving the result (0 or 1) on
  *                the stack
- *   INPUTS: ast -- the AST node corresponding to the greater-or-equal-to 
+ *   INPUTS: ast -- the AST node corresponding to the greater-or-equal-to
  *                  operation
  *   OUTPUTS: none
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_cmp_ge(ast220_t *ast)
+static void gen_op_cmp_ge(ast220_t* ast)
 {
     gen_comparison(ast, "n");
 }
 
-/* 
+/*
  * gen_op_cmp_greater
  *   DESCRIPTION: generate LC-3 assembly code to compare whether the value
  *                of one expression is greater than the value of a second
@@ -761,8 +806,7 @@ static void gen_op_cmp_ge(ast220_t *ast)
  *   RETURN VALUE: none
  *   SIDE EFFECTS: prints LC-3 instructions
  */
-static void gen_op_cmp_greater(ast220_t *ast)
+static void gen_op_cmp_greater(ast220_t* ast)
 {
     gen_comparison(ast, "nz");
 }
-

@@ -78,69 +78,38 @@ typedef enum
 static void gen_long_branch(br_type_t type, ece220_label_t* label);
 
 static void gen_statement(ast220_t* ast);
-
 static void gen_for_statement(ast220_t* ast);
-
 static void gen_if_statement(ast220_t* ast);
-
 static void gen_return_statement(ast220_t* ast);
-
 static void gen_pop_stack(ast220_t* ast);
-
 static void gen_debug_marker(ast220_t* ast);
 
 static void gen_expression(ast220_t* ast);
-
 static void gen_push_int(ast220_t* ast);
-
 static void gen_push_str(ast220_t* ast);
-
 static void gen_push_variable(ast220_t* ast);
-
 static void gen_func_call(ast220_t* ast);
-
 static void gen_get_address(ast220_t* ast);
-
 static void gen_op_assign(ast220_t* ast);
-
 static void gen_op_pre_incr(ast220_t* ast);
-
 static void gen_op_pre_decr(ast220_t* ast);
-
 static void gen_op_post_incr(ast220_t* ast);
-
 static void gen_op_post_decr(ast220_t* ast);
-
 static void gen_op_add(ast220_t* ast);
-
 static void gen_op_sub(ast220_t* ast);
-
 static void gen_op_mult(ast220_t* ast);
-
 static void gen_op_div(ast220_t* ast);
-
 static void gen_op_mod(ast220_t* ast);
-
 static void gen_op_negate(ast220_t* ast);
-
 static void gen_op_log_not(ast220_t* ast);
-
 static void gen_op_log_or(ast220_t* ast);
-
 static void gen_op_log_and(ast220_t* ast);
-
 static void gen_comparison(ast220_t* ast, const char* false_cond);
-
 static void gen_op_cmp_ne(ast220_t* ast);
-
 static void gen_op_cmp_less(ast220_t* ast);
-
 static void gen_op_cmp_le(ast220_t* ast);
-
 static void gen_op_cmp_eq(ast220_t* ast);
-
 static void gen_op_cmp_ge(ast220_t* ast);
-
 static void gen_op_cmp_greater(ast220_t* ast);
 
 
@@ -172,6 +141,8 @@ ece220_label_t* ret = NULL;
  */
 void MP11_generate_code(ast220_t* prog)
 {
+    if (ret == NULL) ret = label_create();
+
     if (prog->type == AST220_FOR_STMT || prog->type == AST220_IF_STMT || prog->type == AST220_RETURN_STMT ||
         prog->type == AST220_POP_STACK || prog->type == AST220_DEBUG_MARKER)
     {
@@ -182,9 +153,13 @@ void MP11_generate_code(ast220_t* prog)
         gen_expression(prog);
     }
 
-    if (prog->next != NULL)
+    if (prog->next != NULL) // not the last statement
     {
         MP11_generate_code(prog->next);
+    }
+    else // the last statement
+    {
+        printf("%s\n", label_value(ret));
     }
 }
 
@@ -264,7 +239,7 @@ static void gen_for_statement(ast220_t* ast)
 {
     ece220_label_t* loop = label_create();
     ece220_label_t* end = label_create();
-    if (ast->left != NULL) gen_expression(ast->left);
+    if (ast->left != NULL) gen_statement(ast->left);
     printf("%s\n", label_value(loop));
     gen_expression(ast->test);
     printf("\tLDR R0,R6,#0\n"); // load the value into R0
@@ -277,7 +252,7 @@ static void gen_for_statement(ast220_t* ast)
         gen_statement(stmt);
         stmt = stmt->next;
     }
-    if (ast->right != NULL) gen_expression(ast->right);
+    if (ast->right != NULL) gen_statement(ast->right);
     gen_long_branch(BR_ALWAYS, loop);
     printf("%s\n", label_value(end));
 }
@@ -293,7 +268,6 @@ static void gen_for_statement(ast220_t* ast)
 static void gen_if_statement(ast220_t* ast)
 {
     ece220_label_t* not_met = label_create(); // label for not meeting the condition
-    ece220_label_t* end = label_create();
     gen_expression(ast->test);
     printf("\tLDR R0,R6,#0\n"); // load the value into R0
     printf("\tADD R6,R6,#1\n"); // pop the value off the stack
@@ -305,10 +279,11 @@ static void gen_if_statement(ast220_t* ast)
         gen_statement(stmt);
         stmt = stmt->next;
     }
-    gen_long_branch(BR_ALWAYS, end);
-    printf("%s\n", label_value(not_met));
-    if (ast->right)
+    if (ast->right != NULL)
     {
+        ece220_label_t* end = label_create();
+        gen_long_branch(BR_ALWAYS, end);
+        printf("%s\n", label_value(not_met));
         stmt = ast->right;
         while (stmt != NULL)
         {
@@ -317,7 +292,10 @@ static void gen_if_statement(ast220_t* ast)
         }
         printf("%s\n", label_value(end));
     }
-
+    else
+    {
+        printf("%s\n", label_value(not_met));
+    }
 }
 
 /*
@@ -847,8 +825,8 @@ static void gen_op_mult(ast220_t* ast)
     gen_expression(ast->right);
     ece220_label_t* mult = label_create();
     ece220_label_t* ins = label_create();
-    printf("\tLD R1,R6,#0\n"); // load a value into R1
-    printf("\tLD R0,R6,#1\n"); // load another value into R0
+    printf("\tLDR R1,R6,#0\n"); // load a value into R1
+    printf("\tLDR R0,R6,#1\n"); // load another value into R0
     printf("\tADD R6,R6,#2\n"); // pop the two values off the stack
     printf("\tLD R2,%s\n", label_value(mult)); // load the addr of the function into R2
     printf("\tJSRR R2\n"); // jump to the function
@@ -876,8 +854,8 @@ static void gen_op_div(ast220_t* ast)
     gen_expression(ast->right);
     ece220_label_t* div = label_create();
     ece220_label_t* ins = label_create();
-    printf("\tLD R1,R6,#0\n"); // load a value into R1
-    printf("\tLD R0,R6,#1\n"); // load another value into R0
+    printf("\tLDR R1,R6,#0\n"); // load a value into R1
+    printf("\tLDR R0,R6,#1\n"); // load another value into R0
     printf("\tADD R6,R6,#2\n"); // pop the two values off the stack
     printf("\tLD R2,%s\n", label_value(div)); // load the addr of the function into R2
     printf("\tJSRR R2\n"); // jump to the function
@@ -906,8 +884,8 @@ static void gen_op_mod(ast220_t* ast)
     gen_expression(ast->right);
     ece220_label_t* mod = label_create();
     ece220_label_t* ins = label_create();
-    printf("\tLD R1,R6,#0\n"); // load a value into R1
-    printf("\tLD R0,R6,#1\n"); // load another value into R0
+    printf("\tLDR R1,R6,#0\n"); // load a value into R1
+    printf("\tLDR R0,R6,#1\n"); // load another value into R0
     printf("\tADD R6,R6,#2\n"); // pop the two values off the stack
     printf("\tLD R2,%s\n", label_value(mod)); // load the addr of the function into R2
     printf("\tJSRR R2\n"); // jump to the function
@@ -949,7 +927,7 @@ static void gen_op_negate(ast220_t* ast)
  */
 static void gen_op_log_not(ast220_t* ast)
 {
-    ece220_label_t *branch = label_create();
+    ece220_label_t* branch = label_create();
     gen_expression(ast->left);
     printf("\tAND R1,R1,#0"); // set R1 to 0
     printf("\tLDR R0,R6,#0\n"); // load the value into R0
